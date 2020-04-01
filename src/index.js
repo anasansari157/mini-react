@@ -109,15 +109,15 @@ function commitDeletion(fiber, domParent) {
 }
 
 function render(element, container) {
-  wipRoot = {
-    dom: container,
-    props: {
-      children: [element]
-    },
-    alternate: currentRoot
-  };
-  deletions = [];
-  nextUnitOfWork = wipRoot;
+	wipRoot = {
+		dom: container,
+		props: {
+			children: [element]
+		},
+		alternate: currentRoot
+	};
+	deletions = [];
+	nextUnitOfWork = wipRoot;
 }
 
 let nextUnitOfWork = null;
@@ -126,39 +126,47 @@ let wipRoot = null;
 let deletions = null;
 
 function workLoop(deadline) {
-  let shouldYield = false;
-  while (nextUnitOfWork && !shouldYield) {
-    nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-    shouldYield = deadline.timeRemaining() < 1;
-  }
+	let shouldYield = false;
+	while (nextUnitOfWork && !shouldYield) {
+		nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+		shouldYield = deadline.timeRemaining() < 1;
+	}
 
-  if (!nextUnitOfWork && wipRoot) {
-    commitRoot();
-  }
+	if (!nextUnitOfWork && wipRoot) {
+		commitRoot();
+	}
 
-  requestIdleCallback(workLoop);
+	requestIdleCallback(workLoop);
 }
 
 requestIdleCallback(workLoop);
 
 function performUnitOfWork(fiber) {
-  const isFunctionComponent = fiber.type instanceof Function;
-  if (isFunctionComponent) {
-    updateFunctionComponent(fiber);
-  } else {
-    updateHostComponent(fiber);
-  }
-  if (fiber.child) {
-    return fiber.child;
-  }
-  let nextFiber = fiber;
-  while (nextFiber) {
-    if (nextFiber.sibling) {
-      return nextFiber.sibling;
-    }
-    nextFiber = nextFiber.parent;
-  }
+	const isFunctionComponent = fiber.type instanceof Function;
+	if (isFunctionComponent) {
+		updateFunctionComponent(fiber);
+	} else {
+		updateHostComponent(fiber);
+	}
+	if (fiber.child) {
+		return fiber.child;
+	}
+	let nextFiber = fiber;
+	while (nextFiber) {
+		if (nextFiber.sibling) {
+			return nextFiber.sibling;
+		}
+		nextFiber = nextFiber.parent;
+	}
 }
 
 let wipFiber = null;
 let hookIndex = null;
+
+function updateFunctionComponent(fiber) {
+	wipFiber = fiber;
+	hookIndex = 0;
+	wipFiber.hooks = [];
+	const children = [fiber.type(fiber.props)];
+	reconcileChildren(fiber, children);
+}
